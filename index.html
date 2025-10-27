@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Letter for Jill</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      min-height: 100vh;
+      background: #ffb6df;
+      overflow: hidden;
+      position: relative;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    /* Hearts canvas */
+    #hearts-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+    }
+    /* Centered envelope */
+    .center-box {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .envelope {
+      width: 220px;
+      height: 140px;
+      cursor: pointer;
+      position: relative;
+      transition: box-shadow 0.3s;
+      box-shadow: 0 6px 24px rgba(110,0,60,0.13);
+    }
+    /* Envelope body */
+    .envelope-body {
+      width: 100%;
+      height: 100px;
+      background: #ff69b4;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      border-radius: 0 0 15px 15px;
+      border: 2px solid #fff;
+    }
+    /* Envelope flap */
+    .envelope-flap {
+      width: 100%;
+      height: 80px;
+      background: #ff99cc;
+      position: absolute;
+      top: 0;
+      left: 0;
+      clip-path: polygon(0 0, 100% 0, 50% 85%, 0 0);
+      border-top-left-radius: 15px;
+      border-top-right-radius: 15px;
+      border: 2px solid #fff;
+      border-bottom: none;
+      z-index: 2;
+      transition: transform 0.7s cubic-bezier(0.77,0,0.18,1);
+      transform-origin: top center;
+    }
+    .envelope.open .envelope-flap {
+      transform: rotateX(120deg);
+    }
+    /* Envelope shadow for open effect */
+    .envelope.open {
+      box-shadow: 0 18px 40px rgba(110,0,60,0.23);
+    }
+    /* Click text below the envelope */
+    .click-text {
+      margin-top: 18px;
+      color: #e62e7a;
+      font-style: italic;
+      font-size: 1.2em;
+      font-family: cursive, 'Segoe Script', Arial;
+      letter-spacing: 1.5px;
+      user-select: none;
+      transition: opacity 0.3s;
+      text-align: center;
+    }
+    .hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    /* Paper letter animation */
+    .paper {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 370px;
+      max-width: 92vw;
+      height: 430px;
+      max-height: 80vh;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(120,0,60,0.17);
+      transform: translate(-50%, -52%) scale(0.1);
+      opacity: 0;
+      z-index: 10;
+      transition: transform 0.7s cubic-bezier(0.77,0,0.18,1), opacity 0.6s;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px 32px 24px;
+    }
+    .paper.open {
+      opacity: 1;
+      transform: translate(-50%, -52%) scale(1);
+    }
+    .letter-content {
+      font-size: 0.95em;
+      font-style: italic;
+      color: #c52e79;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      line-height: 1.5;
+      letter-spacing: 0.02em;
+      overflow: auto;
+      max-height: 100%;
+      word-break: break-word;
+      text-align: left;
+    }
+    @media (max-width: 600px) {
+      .paper {
+        width: 95vw;
+        height: 85vw;
+        padding: 15vw 4vw 15vw 4vw;
+      }
+      .letter-content {
+        font-size: 0.85em;
+      }
+      .center-box {
+        width: 100vw;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="hearts-canvas"></canvas>
+  <div class="center-box">
+    <div class="envelope" id="envelope">
+      <div class="envelope-flap"></div>
+      <div class="envelope-body"></div>
+    </div>
+    <div class="click-text" id="clickText">Click me to Open</div>
+  </div>
+  <div class="paper" id="paper">
+    <div class="letter-content">
+      Hi Jill,<br><br>
+      I know this is so random because I made a letter for you, but I did it because you deserve to receive something like this. I know you like letters, so I'll write you some even if there are no events.<br><br>
+      I did this because I want to thank you for every day that you make me happy and every time we talk and play. I am happy that I met you and that even though we don't see each other and are far from each other, I would choose this more.<br><br>
+      But if I were given a request, it would be that I hope to be with you when you are ready. I hope you know how important you are to me.<br><br>
+      I will always say "How are you?" to you because I always want to know if you are okay. If you have a problem, and something is bothering you, and you need someone to talk to, I hope you don't hesitate to talk to me. Even if it comes to the point that I am busy, I will always make time for you.<br><br>
+      Always remember that I am always here and supporting you in your academics and your goals. And I will always choose to wait for you because you're so worth it for me.
+    </div>
+  </div>
+  <script>
+    // Envelope & Paper state
+    const envelope = document.getElementById('envelope');
+    const paper = document.getElementById('paper');
+    const clickText = document.getElementById('clickText');
+    let open = false;
+
+    function openEnvelope() {
+      envelope.classList.add('open');
+      paper.classList.add('open');
+      clickText.classList.add('hidden');
+      open = true;
+    }
+    function closeEnvelope() {
+      envelope.classList.remove('open');
+      paper.classList.remove('open');
+      clickText.classList.remove('hidden');
+      open = false;
+    }
+
+    envelope.addEventListener('click', () => {
+      if (!open) openEnvelope();
+    });
+    paper.addEventListener('click', () => {
+      if (open) closeEnvelope();
+    });
+
+    // Heart animation
+    const canvas = document.getElementById('hearts-canvas');
+    const ctx = canvas.getContext('2d');
+    let hearts = [];
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+
+    function resizeCanvas() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function random(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+    function drawHeart(x, y, size, color) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(x, y + size / 4);
+      ctx.bezierCurveTo(x, y, x - size / 2, y, x - size / 2, y + size / 4);
+      ctx.bezierCurveTo(x - size / 2, y + size / 2, x, y + size, x, y + size * 1.2);
+      ctx.bezierCurveTo(x, y + size, x + size / 2, y + size / 2, x + size / 2, y + size / 4);
+      ctx.bezierCurveTo(x + size / 2, y, x, y, x, y + size / 4);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.85;
+      ctx.shadowColor = '#ffb6df';
+      ctx.shadowBlur = 6;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function createHeart() {
+      const colors = ['#fff', '#ff69b4', '#ffb6df', '#ff99cc'];
+      const color = colors[Math.floor(random(0, colors.length))];
+      hearts.push({
+        x: random(0, width),
+        y: height + 30,
+        size: random(16, 38),
+        alpha: random(0.6, 1),
+        speed: random(1.2, 2.8),
+        drift: random(-0.4, 0.4),
+        color: color,
+        rot: random(-0.07, 0.07),
+        angle: random(0, Math.PI * 2)
+      });
+    }
+
+    function animateHearts() {
+      ctx.clearRect(0, 0, width, height);
+      if (hearts.length < 30) {
+        if (Math.random() < 0.15) createHeart();
+      }
+      for (let i = 0; i < hearts.length; i++) {
+        let h = hearts[i];
+        h.y -= h.speed;
+        h.x += h.drift;
+        h.angle += h.rot;
+        ctx.save();
+        ctx.globalAlpha = h.alpha;
+        ctx.translate(h.x, h.y);
+        ctx.rotate(h.angle);
+        drawHeart(0, 0, h.size, h.color);
+        ctx.restore();
+      }
+      hearts = hearts.filter(h => h.y > -50);
+      requestAnimationFrame(animateHearts);
+    }
+    animateHearts();
+  </script>
+</body>
+</html>
